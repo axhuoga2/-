@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇游戏</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            background-color: #000;
+            display: block;
+        }
+        .info {
+            position: absolute;
+            top: 10px;
+            text-align: center;
+            color: #fff;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">
+        分数：<span id="score">0</span>
+    </div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 游戏状态
+        const boxSize = 20; // 每格大小
+        const canvasSize = canvas.width; // 画布大小
+        let snake = [{ x: boxSize * 5, y: boxSize * 5 }]; // 初始蛇
+        let direction = 'RIGHT'; // 初始方向
+        let food = { x: getRandomPosition(), y: getRandomPosition() }; // 食物位置
+        let score = 0;
+
+        // 随机生成位置
+        function getRandomPosition() {
+            return Math.floor(Math.random() * (canvasSize / boxSize)) * boxSize;
+        }
+
+        // 画格子
+        function drawBox(color, x, y) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, boxSize, boxSize);
+            ctx.strokeStyle = '#111';
+            ctx.strokeRect(x, y, boxSize, boxSize);
+        }
+
+        // 更新食物
+        function drawFood() {
+            drawBox('red', food.x, food.y);
+        }
+
+        // 更新蛇
+        function drawSnake() {
+            snake.forEach((segment, index) => {
+                drawBox(index === 0 ? 'lime' : 'green', segment.x, segment.y);
+            });
+        }
+
+        // 移动蛇
+        function moveSnake() {
+            const head = { ...snake[0] };
+
+            if (direction === 'LEFT') head.x -= boxSize;
+            if (direction === 'UP') head.y -= boxSize;
+            if (direction === 'RIGHT') head.x += boxSize;
+            if (direction === 'DOWN') head.y += boxSize;
+
+            // 添加新头部
+            snake.unshift(head);
+
+            // 吃到食物
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                document.getElementById('score').innerText = score;
+                food = { x: getRandomPosition(), y: getRandomPosition() }; // 生成新食物
+            } else {
+                snake.pop(); // 删除尾部
+            }
+        }
+
+        // 检查游戏结束
+        function checkGameOver() {
+            const head = snake[0];
+
+            // 碰到墙壁
+            if (head.x < 0 || head.x >= canvasSize || head.y < 0 || head.y >= canvasSize) {
+                return true;
+            }
+
+            // 碰到自己
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // 监听按键
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && direction !== 'RIGHT') direction = 'LEFT';
+            if (e.key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
+            if (e.key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
+            if (e.key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
+        });
+
+        // 游戏循环
+        function gameLoop() {
+            if (checkGameOver()) {
+                alert(`游戏结束！你的得分是：${score}`);
+                document.location.reload();
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvasSize, canvasSize);
+            drawFood();
+            drawSnake();
+            moveSnake();
+
+            setTimeout(gameLoop, 800); // 调整游戏速度
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
